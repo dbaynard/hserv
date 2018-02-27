@@ -1,0 +1,29 @@
+name: hserv
+version: '0.1.2.0'
+synopsis: Simple http server in haskell.
+description: Simple http server in haskell, similar to as provided by `python -m SimpleHTTPServer`.
+category: Network
+author: rejuvyesh
+maintainer: rejuvyesh <mail@rejuvyesh.com>
+license: MIT
+github: rejuvyesh/hserv
+homepage: http://github.com/rejuvyesh/hserv
+extra-source-files:
+- README.md
+other-extensions:
+- OverloadedStrings
+- DeriveDataTypeable
+ghc-options:
+- -O3
+- -Wall
+- -threaded
+dependencies:
+- base >=4.6 && <=5
+- wai-app-static >=2.0
+- warp >=2.0
+- cmdargs >=0.10
+- wai-extra >=2.0
+executables:
+  hserv:
+    main: Main.hs
+    source-dirs: src
