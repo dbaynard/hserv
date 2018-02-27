@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: d20fe3ac7a7bda407d813de1b1adf73a2f1ffb03bcd9ee07e79c626997967b86
+-- hash: 4ed098e314f47a1caf745c92c7fc08c65678f8dd3a4c8704806bfb2b3ca521a9
 
 name:           hserv
 version:        0.1.2.0
@@ -35,6 +35,7 @@ executable hserv
   ghc-options: -O3 -Wall -threaded
   build-depends:
       base >=4.6 && <=5
+    , bytestring >=0.10.8.0
     , cmdargs >=0.10
     , wai-app-static >=2.0
     , wai-extra >=2.0

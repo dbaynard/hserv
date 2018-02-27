@@ -12,24 +12,46 @@ import           Network.Wai.Middleware.RequestLogger (logStdoutDev)
 import           Paths_hserv                          (version)
 import           Data.Version                         (showVersion)
 import           System.Console.CmdArgs               (Data, Typeable, cmdArgs, help,
-                                                       opt, summary, (&=))
+                                                       opt, summary, (&=), typ)
+import           Network.Wai.Middleware.AddHeaders    (addHeaders)
+import           Data.ByteString                      (ByteString)
+import qualified Data.ByteString as BS
+import qualified Data.ByteString.Char8 as BS8
+import           Data.Semigroup
 
 data Hserv = Hserv
              { port :: Int
+             , cookies :: [CookiePair]
              , verbose :: Bool
              }
              deriving (Data, Typeable)
+
+type CookiePair = (String, FilePath)
+
+type Header = (ByteString, ByteString)
 
 main :: IO()
 main = do
   hserv <- cmdArgs $ Hserv
            { port = 8888 &= help "Port on which server should run" &= opt (8888::Int)
+           , cookies = [] &= help "List of (name, file) pairs for cookies"
+               &= opt ([] :: [CookiePair]) &= typ "[COOKIE-NAME,FILE]"
            , verbose = False &= help "Log each request" }
            &= summary ("hserv " ++ showVersion version)
-  let Hserv {port=p, verbose=v} = hserv
-  let middleware = if v then logStdoutDev else id
+  let Hserv {port=p, cookies=c, verbose=v} = hserv
+  let logging = if v then logStdoutDev else id
+  cs <- readCookies c
+  let cookied = if null cs then id else addHeaders cs
+  let middleware = logging . cookied
   putStrLn $ "Running hserv on port " ++ (show p)
   putStrLn $ "Go to http://0.0.0.0:" ++ (show p)
   run p $ middleware $ staticApp 
         $ (defaultFileServerSettings ".") {ssAddTrailingSlash = True}
+
+readCookies :: [CookiePair] -> IO [Header]
+readCookies = mapM readCookie
+  where
+    readCookie (name, filepath) = do
+      contents <- BS.readFile filepath
+      pure ("Set-Cookie", BS8.pack name <> "=" <> contents)
 
