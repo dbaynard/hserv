@@ -19,6 +19,7 @@ ghc-options:
 - -threaded
 dependencies:
 - base >=4.6 && <=5
+- base64-bytestring-type
 - bytestring >= 0.10.8.0
 - wai-app-static >=2.0
 - warp >=2.0

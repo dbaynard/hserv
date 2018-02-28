@@ -3,6 +3,7 @@
 
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE OverloadedStrings  #-}
+{-# LANGUAGE FlexibleContexts #-}
 module Main where
 
 import           Network.Wai.Application.Static       (defaultFileServerSettings,
@@ -18,6 +19,7 @@ import           Data.ByteString                      (ByteString)
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BS8
 import           Data.Semigroup
+import           Data.ByteString.Base64.URL.Type      (getEncodedByteString64, mkBS64)
 
 data Hserv = Hserv
              { port :: Int
@@ -34,7 +36,7 @@ main :: IO()
 main = do
   hserv <- cmdArgs $ Hserv
            { port = 8888 &= help "Port on which server should run" &= opt (8888::Int)
-           , cookies = [] &= help "List of (name, file) pairs for cookies"
+           , cookies = [] &= help "List of (name, file) pairs for cookies; files will be base64 encoded."
                &= opt ([] :: [CookiePair]) &= typ "[COOKIE-NAME,FILE]"
            , verbose = False &= help "Log each request" }
            &= summary ("hserv " ++ showVersion version)
@@ -49,9 +51,9 @@ main = do
         $ (defaultFileServerSettings ".") {ssAddTrailingSlash = True}
 
 readCookies :: [CookiePair] -> IO [Header]
-readCookies = mapM readCookie
+readCookies = traverse readCookie
   where
     readCookie (name, filepath) = do
-      contents <- BS.readFile filepath
-      pure ("Set-Cookie", BS8.pack name <> "=" <> contents)
+      contents <- mkBS64 <$> BS.readFile filepath
+      pure ("Set-Cookie", BS8.pack name <> "=" <> getEncodedByteString64 contents)
 
